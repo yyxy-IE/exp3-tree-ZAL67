@@ -51,11 +51,43 @@ int cmpNode(const void *a, const void *b) {
 
 // 递归构建目录树（核心难点）
 FileNode* buildTree(const char *path) {
-    // TODO: 实现
+    DIR*dir=opendir(path);
+    if(!dir){
+        perrior("opendir");
+        rerturn NULL;
+    }// TODO: 实现
     // 步骤提示：
     // 1. opendir 打开目录，失败返回 NULL
     // 2. 从 path 中提取最后的目录名作为当前结点名（注意处理根目录"/"）
+    const char*base=strrchr (path,'/');
+    base=base?base+1:path;
+    FileNode*curDir=createNode(base,1);
     // 3. 创建当前目录结点
+    struct dirent*entry;
+    FileNode **children=NULL;
+    int childCount =0;
+
+    while((entry=readdir(dir))!=NULL){
+      if(strcmp(entry->d_name,".")==0||strcmp(entry->d_name,"..")==0)
+        continue;
+
+      char fullPath[1024];
+      snprintf(fullPath,sizeof(fullPath),"%s%s",path,entry->d_name);
+      struct stat st;
+      if(stat(fullPath,&st)!=0) continue;
+
+    FileNode *child=NULL;
+    if(s_ISDIR(st.st_mode)){
+     child=buildTree(fullPath);
+    }else if(s_ISREG(st.st_mode)){
+        child-createNode(entry->d_name,0);
+    }
+    if (child){
+    children=(FileNode**)realloc(children,(childCount+1)*sizeof(FileNode*));
+    children[childCount++]=child; 
+      }
+    }
+    closedir(dir);
     // 4. 循环 readdir，跳过 "." 和 ".."
     // 5. 拼接完整路径，用 stat 判断类型
     // 6. 若是目录，递归调用 buildTree；若是普通文件，调用 createNode
